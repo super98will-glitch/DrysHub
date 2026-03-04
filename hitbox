@@ -1,0 +1,49 @@
+local Players = game:GetService("Players")
+
+-- CONFIGURAÇÕES
+local HITBOX_SIZE = Vector3.new(16, 10, 16) -- AINDA MAIOR
+local HITBOX_OFFSET = 6
+local DAMAGE = 25
+
+local function createHitbox(player)
+	local character = player.Character
+	if not character then return end
+	
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+	
+	-- Área na frente do jogador
+	local boxCFrame = root.CFrame * CFrame.new(0, 0, -HITBOX_OFFSET)
+	
+	local overlapParams = OverlapParams.new()
+	overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+	overlapParams.FilterDescendantsInstances = {character}
+	
+	local parts = workspace:GetPartBoundsInBox(boxCFrame, HITBOX_SIZE, overlapParams)
+	
+	for _, part in ipairs(parts) do
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model and model ~= character then
+			local humanoid = model:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				-- Agora pode dar múltiplos hits no mesmo alvo
+				humanoid:TakeDamage(DAMAGE)
+			end
+		end
+	end
+end
+
+-- Tool automática para teste
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		
+		local tool = Instance.new("Tool")
+		tool.Name = "UltraAttack_NoLimit"
+		tool.RequiresHandle = false
+		tool.Parent = player.Backpack
+		
+		tool.Activated:Connect(function()
+			createHitbox(player)
+		end)
+	end)
+end)
