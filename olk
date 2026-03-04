@@ -1,0 +1,149 @@
+-- ================================
+-- NETWORK OPTIMIZATION
+-- ================================
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+workspace.InterpolationThrottling = Enum.InterpolationThrottlingMode.Enabled
+workspace.PhysicsSteppingMethod = Enum.PhysicsSteppingMethod.Fixed
+
+for _, part in pairs(workspace:GetDescendants()) do
+	if part:IsA("BasePart") then
+		part:SetNetworkOwnershipAuto()
+	end
+end
+
+for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+	if remote:IsA("RemoteEvent") then
+		remote:SetAttribute("Optimized", true)
+	end
+end
+
+print("Otimização de rede ativada!")
+
+
+-- ================================
+-- FPS BOOST
+-- ================================
+settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+for _, v in pairs(Lighting:GetChildren()) do
+	if v:IsA("BlurEffect") 
+	or v:IsA("SunRaysEffect") 
+	or v:IsA("BloomEffect") 
+	or v:IsA("DepthOfFieldEffect") 
+	or v:IsA("ColorCorrectionEffect") then
+		v:Destroy()
+	end
+end
+
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 1000000
+Lighting.Brightness = 1
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("ParticleEmitter") 
+	or obj:IsA("Trail") 
+	or obj:IsA("Smoke") 
+	or obj:IsA("Fire") 
+	or obj:IsA("Sparkles") then
+		obj.Enabled = false
+	end
+	
+	if obj:IsA("Decal") or obj:IsA("Texture") then
+		obj:Destroy()
+	end
+	
+	if obj:IsA("BasePart") then
+		obj.Material = Enum.Material.Plastic
+		obj.Reflectance = 0
+	end
+end
+
+print("Modo FPS Boost ativado!")
+
+
+-- ================================
+-- SKY MODIFICADO (ID 159248188)
+-- ================================
+for _, v in pairs(Lighting:GetChildren()) do
+	if v:IsA("Sky") then
+		v:Destroy()
+	end
+end
+
+local sky = Instance.new("Sky")
+sky.SkyboxBk = "rbxassetid://159248188"
+sky.SkyboxDn = "rbxassetid://159248188"
+sky.SkyboxFt = "rbxassetid://159248188"
+sky.SkyboxLf = "rbxassetid://159248188"
+sky.SkyboxRt = "rbxassetid://159248188"
+sky.SkyboxUp = "rbxassetid://159248188"
+sky.Parent = Lighting
+
+
+-- ================================
+-- FPS COUNTER + WATERMARK
+-- ================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RebeldeHUD"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game.CoreGui
+
+-- FPS Label
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0,150,0,30)
+fpsLabel.Position = UDim2.new(1,-160,0,10)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.TextColor3 = Color3.new(1,1,1)
+fpsLabel.TextStrokeTransparency = 0
+fpsLabel.TextScaled = true
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.Text = "FPS: 0"
+fpsLabel.Parent = ScreenGui
+
+-- Watermark
+local watermark = Instance.new("TextLabel")
+watermark.Size = UDim2.new(0,220,0,30)
+watermark.Position = UDim2.new(1,-230,0,40)
+watermark.BackgroundTransparency = 1
+watermark.Text = "Rebelde X Dryx"
+watermark.TextScaled = true
+watermark.Font = Enum.Font.GothamBold
+watermark.TextColor3 = Color3.new(1,1,1)
+watermark.Parent = ScreenGui
+
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+	ColorSequenceKeypoint.new(1, Color3.new(0,0,0))
+}
+gradient.Parent = watermark
+
+-- Smooth Gradient Animation
+task.spawn(function()
+	local offset = -1
+	while true do
+		offset += 0.01
+		if offset > 1 then
+			offset = -1
+		end
+		gradient.Offset = Vector2.new(offset,0)
+		RunService.RenderStepped:Wait()
+	end
+end)
+
+-- FPS Calculation
+local last = tick()
+
+RunService.RenderStepped:Connect(function()
+	local now = tick()
+	local fps = math.floor(1 / (now - last))
+	last = now
+	fpsLabel.Text = "FPS: "..fps
+end)
