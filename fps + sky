@@ -57,12 +57,12 @@ local sky = Instance.new("Sky")
 sky.Name = "FPSBoostSky"
 
 -- Sky roxo claro
-sky.SkyboxBk = "rbxassetid://570557514"
-sky.SkyboxDn = "rbxassetid://570557514"
-sky.SkyboxFt = "rbxassetid://570557514"
-sky.SkyboxLf = "rbxassetid://570557514"
-sky.SkyboxRt = "rbxassetid://570557514"
-sky.SkyboxUp = "rbxassetid://570557514"
+sky.SkyboxBk = "rbxassetid://159248188"
+sky.SkyboxDn = "rbxassetid://159248188"
+sky.SkyboxFt = "rbxassetid://159248188"
+sky.SkyboxLf = "rbxassetid://159248188"
+sky.SkyboxRt = "rbxassetid://159248188"
+sky.SkyboxUp = "rbxassetid://159248188"
 
 sky.Parent = Lighting
 
