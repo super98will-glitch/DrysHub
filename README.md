@@ -1,6 +1,6 @@
 --// CONFIG
-local UpdateDelay = 0.5
-local MaxDataPoints = 30
+local UpdateDelay = 0.4
+local MaxPoints = 25
 
 --// SERVICES
 local Players = game:GetService("Players")
@@ -9,133 +9,133 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 --// DATA
-local FPSData = {}
-local PingData = {}
-
+local FPSData = table.create(MaxPoints, 0)
 local CurrentFPS = 0
+local Enabled = true
+local DataIndex = 0
 
 --// GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "PerformanceGraph"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local Container = Instance.new("Frame")
-Container.Size = UDim2.new(0, 350, 0, 180)
-Container.Position = UDim2.new(0, 20, 0, 20)
-Container.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+Container.Size = UDim2.new(0, 300, 0, 160)
+Container.Position = UDim2.new(0, 30, 0, 30)
+Container.BackgroundColor3 = Color3.fromRGB(18,18,22)
+Container.BorderSizePixel = 0
 Container.Parent = ScreenGui
 
-Container.BorderSizePixel = 0
-Container.BackgroundTransparency = 0
-
-local UICorner = Instance.new("UICorner", Container)
-UICorner.CornerRadius = UDim.new(0, 12)
-
-local UIStroke = Instance.new("UIStroke", Container)
-UIStroke.Thickness = 1
-UIStroke.Color = Color3.fromRGB(60, 60, 70)
-
 local Title = Instance.new("TextLabel")
-Title.Parent = Container
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Size = UDim2.new(1,0,0,25)
 Title.BackgroundTransparency = 1
-Title.Text = "Performance Monitor"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
-Title.TextColor3 = Color3.fromRGB(230,230,255)
+Title.Text = "ULTRA LIGHT FPS"
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 15
+Title.TextColor3 = Color3.fromRGB(200,200,220)
+Title.Parent = Container
+
+local Toggle = Instance.new("TextButton")
+Toggle.Size = UDim2.new(0,80,0,22)
+Toggle.Position = UDim2.new(1,-85,0,2)
+Toggle.Text = "ON"
+Toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
+Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.Font = Enum.Font.SourceSansBold
+Toggle.TextSize = 13
+Toggle.BorderSizePixel = 0
+Toggle.Parent = Container
 
 local GraphFrame = Instance.new("Frame")
+GraphFrame.Position = UDim2.new(0,10,0,30)
+GraphFrame.Size = UDim2.new(1,-20,1,-40)
+GraphFrame.BackgroundColor3 = Color3.fromRGB(25,25,30)
+GraphFrame.BorderSizePixel = 0
 GraphFrame.Parent = Container
-GraphFrame.Position = UDim2.new(0, 10, 0, 40)
-GraphFrame.Size = UDim2.new(1, -20, 1, -50)
-GraphFrame.BackgroundTransparency = 1
 
---// FPS CALC
+--// PRECRIAR PONTOS E LINHAS (REUTILIZADOS)
+local Points = {}
+local Lines = {}
+
+for i = 1, MaxPoints do
+	local point = Instance.new("Frame")
+	point.Size = UDim2.new(0,5,0,5)
+	point.BackgroundColor3 = Color3.fromRGB(0,200,255)
+	point.BorderSizePixel = 0
+	point.Parent = GraphFrame
+	Points[i] = point
+
+	if i > 1 then
+		local line = Instance.new("Frame")
+		line.BackgroundColor3 = Color3.fromRGB(0,200,255)
+		line.BorderSizePixel = 0
+		line.AnchorPoint = Vector2.new(0.5,0.5)
+		line.Parent = GraphFrame
+		Lines[i] = line
+	end
+end
+
+--// FPS
 RunService.RenderStepped:Connect(function(dt)
 	if dt > 0 then
-		CurrentFPS = math.floor(1 / dt)
+		CurrentFPS = math.floor(1/dt)
 	end
 end)
 
---// PING
-local function GetPing()
-	local ping = LocalPlayer:GetNetworkPing()
-	return math.round(ping * 1000) -- convert to ms
-end
-
---// ADD DATA
-local function AddData(tbl, value)
-	if #tbl >= MaxDataPoints then
-		table.remove(tbl, 1)
+--// TOGGLE
+Toggle.MouseButton1Click:Connect(function()
+	Enabled = not Enabled
+	if Enabled then
+		Toggle.Text = "ON"
+		Toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
+		GraphFrame.Visible = true
+	else
+		Toggle.Text = "OFF"
+		Toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+		GraphFrame.Visible = false
 	end
-	table.insert(tbl, value)
-end
-
---// DRAW GRAPH
-local function DrawGraph()
-	GraphFrame:ClearAllChildren()
-
-	local width = GraphFrame.AbsoluteSize.X
-	local height = GraphFrame.AbsoluteSize.Y
-
-	local maxValue = 0
-
-	for _, v in ipairs(FPSData) do
-		maxValue = math.max(maxValue, v)
-	end
-	for _, v in ipairs(PingData) do
-		maxValue = math.max(maxValue, v)
-	end
-
-	if maxValue == 0 then return end
-
-	local function DrawLine(data, color)
-		local lastPos
-
-		for i, value in ipairs(data) do
-			local x = (i / MaxDataPoints) * width
-			local y = height - ((value / maxValue) * height)
-
-			local point = Instance.new("Frame")
-			point.Size = UDim2.new(0, 4, 0, 4)
-			point.Position = UDim2.new(0, x, 0, y)
-			point.BackgroundColor3 = color
-			point.BorderSizePixel = 0
-			point.Parent = GraphFrame
-
-			local corner = Instance.new("UICorner", point)
-			corner.CornerRadius = UDim.new(1,0)
-
-			if lastPos then
-				local line = Instance.new("Frame")
-				line.BorderSizePixel = 0
-				line.BackgroundColor3 = color
-				line.AnchorPoint = Vector2.new(0.5,0.5)
-
-				local dist = (Vector2.new(x,y) - lastPos).Magnitude
-				line.Size = UDim2.new(0, dist, 0, 2)
-
-				line.Position = UDim2.new(0,(x+lastPos.X)/2,0,(y+lastPos.Y)/2)
-				line.Rotation = math.deg(math.atan2(y-lastPos.Y,x-lastPos.X))
-				line.Parent = GraphFrame
-			end
-
-			lastPos = Vector2.new(x,y)
-		end
-	end
-
-	DrawLine(FPSData, Color3.fromRGB(0,255,140))
-	DrawLine(PingData, Color3.fromRGB(255,100,100))
-end
+end)
 
 --// UPDATE LOOP
 task.spawn(function()
 	while ScreenGui.Parent do
-		AddData(FPSData, CurrentFPS)
-		AddData(PingData, GetPing())
+		if Enabled then
+			-- Atualiza índice circular
+			DataIndex = (DataIndex % MaxPoints) + 1
+			FPSData[DataIndex] = CurrentFPS
 
-		DrawGraph()
+			local width = GraphFrame.AbsoluteSize.X
+			local height = GraphFrame.AbsoluteSize.Y
+
+			local maxValue = 1
+			for i = 1, MaxPoints do
+				maxValue = math.max(maxValue, FPSData[i])
+			end
+
+			local lastPos
+
+			for i = 1, MaxPoints do
+				local index = ((DataIndex + i - 1) % MaxPoints) + 1
+				local value = FPSData[index]
+
+				local x = (i / MaxPoints) * width
+				local y = height - ((value / maxValue) * height)
+
+				local point = Points[i]
+				point.Position = UDim2.new(0, x-2, 0, y-2)
+
+				if lastPos and Lines[i] then
+					local line = Lines[i]
+
+					local dist = (Vector2.new(x,y) - lastPos).Magnitude
+					line.Size = UDim2.new(0, dist, 0, 2)
+					line.Position = UDim2.new(0,(x+lastPos.X)/2,0,(y+lastPos.Y)/2)
+					line.Rotation = math.deg(math.atan2(y-lastPos.Y,x-lastPos.X))
+				end
+
+				lastPos = Vector2.new(x,y)
+			end
+		end
 
 		task.wait(UpdateDelay)
 	end
