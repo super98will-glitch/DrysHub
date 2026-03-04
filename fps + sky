@@ -1,4 +1,4 @@
--- FPS Boost Script
+-- FPS Boosts Script
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 
