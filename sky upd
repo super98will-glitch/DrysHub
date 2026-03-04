@@ -1,0 +1,101 @@
+-- FPS Boosts Script
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+
+-- Reduz qualidade global
+settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+-- Remove efeitos de iluminação pesados
+for _, v in pairs(Lighting:GetChildren()) do
+	if v:IsA("BlurEffect") 
+	or v:IsA("SunRaysEffect") 
+	or v:IsA("BloomEffect") 
+	or v:IsA("DepthOfFieldEffect") 
+	or v:IsA("ColorCorrectionEffect") then
+		v:Destroy()
+	end
+end
+
+-- Configura iluminação simples
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 1000000
+Lighting.Brightness = 1
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+-- Remove texturas e partículas
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("ParticleEmitter") 
+	or obj:IsA("Trail") 
+	or obj:IsA("Smoke") 
+	or obj:IsA("Fire") 
+	or obj:IsA("Sparkles") then
+		obj.Enabled = false
+	end
+	
+	if obj:IsA("Decal") or obj:IsA("Texture") then
+		obj:Destroy()
+	end
+	
+	if obj:IsA("BasePart") then
+		obj.Material = Enum.Material.Plastic
+		obj.Reflectance = 0
+	end
+end
+
+----------------------------------------------------------------
+-- SKY MODIFICADO ULTRA LEVE (não interfere no FPS Boost)
+----------------------------------------------------------------
+
+-- Remove qualquer Sky antigo
+if Lighting:FindFirstChildOfClass("Sky") then
+	Lighting:FindFirstChildOfClass("Sky"):Destroy()
+end
+
+-- Cria novo Sky simples
+local sky = Instance.new("Sky")
+sky.Name = "FPSBoostSky"
+
+-- Sky roxo claro
+sky.SkyboxBk = "rbxassetid://159248188"
+sky.SkyboxDn = "rbxassetid://159248188"
+sky.SkyboxFt = "rbxassetid://159248188"
+sky.SkyboxLf = "rbxassetid://159248188"
+sky.SkyboxRt = "rbxassetid://159248188"
+sky.SkyboxUp = "rbxassetid://159248188"
+
+sky.Parent = Lighting
+
+print("Modo FPS Boost ativado com Sky Modificado!")
+
+----------------------------------------------------------------
+-- WATERMARK Rebelde X Dryx (Gradiente Branco → Preto)
+----------------------------------------------------------------
+
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "RebeldeDryxWatermark"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local label = Instance.new("TextLabel")
+label.Parent = gui
+label.Size = UDim2.new(0, 220, 0, 30)
+label.Position = UDim2.new(1, -230, 1, -40) -- canto inferior direito
+label.BackgroundTransparency = 1
+label.Text = "Rebelde X Dryx"
+label.TextScaled = true
+label.Font = Enum.Font.GothamBold
+label.TextTransparency = 0.2
+label.TextStrokeTransparency = 0.8
+label.ZIndex = 999
+
+-- Gradiente Branco → Preto
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,0))
+}
+gradient.Rotation = 0
+gradient.Parent = label
